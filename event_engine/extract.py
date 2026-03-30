@@ -3,6 +3,9 @@ from datetime import datetime
 from typing import Any, Optional
 
 from .config import LOCATION
+from .logger import LoggerEventEngine
+
+logger = LoggerEventEngine.get_logger()
 
 
 def build_extraction_prompt(page_text: str, today: Optional[str] = None, source_type: str = "webpage") -> str:
@@ -85,11 +88,15 @@ def extract_event_data(claude: Any, page_text: str, source_type: str = "webpage"
             if raw.startswith("json"):
                 raw = raw[4:]
 
-        return json.loads(raw)
+        result = json.loads(raw)
+        logger.debug("Extracted JSON result from Claude: %s", result)
+        return result
 
     except json.JSONDecodeError as exc:
-        print(f"     ✗ JSON parse error: {exc}")
+        logger.warning("     ✗ JSON parse error: %s", exc)
+        logger.debug("Raw Claude response for failed parse: %s", raw)
         return None
     except Exception as exc:
-        print(f"     ✗ Claude API error: {exc}")
+        logger.error("     ✗ Claude API error: %s", exc)
+        logger.debug("Claude API exception details", exc_info=True)
         return None

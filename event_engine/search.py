@@ -1,6 +1,9 @@
 from typing import Any
 
-from .config import BLOCKED_DOMAINS, LOCATION, SEARCH_QUERIES
+from .config import BLOCKED_DOMAINS, VITALY_MAX_RESULT, SEARCH_QUERIES
+from .logger import LoggerEventEngine
+
+logger = LoggerEventEngine.get_logger()
 
 
 def is_blocked_domain(url: str) -> bool:
@@ -16,16 +19,12 @@ def find_event_urls(tavily: Any) -> list[dict]:
     seen_urls = set()
     results = []
 
-    print(f"\n{'='*60}")
-    print(f"  STAGE 1: Searching for events in {LOCATION}")
-    print(f"{'='*60}")
-
     for query in SEARCH_QUERIES:
-        print(f"\n  🔍 Query: {query}")
+        logger.info("\n  🔍 Query: %s", query)
         try:
             response = tavily.search(
                 query=query,
-                max_results=5,
+                max_results=VITALY_MAX_RESULT,
                 search_depth="basic"
             )
             for r in response.get("results", []):
@@ -40,9 +39,12 @@ def find_event_urls(tavily: Any) -> list[dict]:
                         "is_social": social,
                     })
                     tag = "📱" if social else "  "
-                    print(f"     {tag} + {r.get('title', url)[:67]}")
+                    logger.info("     %s + %s: %s", tag, "title", r.get("title", url)[:67])
+                    logger.info("     %s + %s: %s", tag, "url", url)
+                    logger.info("     %s + %s: %s", tag, "snippet", r.get("content", "")[:500])
         except Exception as exc:
-            print(f"     ✗ Search failed: {exc}")
+            logger.error("     ✗ Search failed: %s", exc)
+            logger.debug("Search exception details for query %s", query, exc_info=True)
 
-    print(f"\n  ✅ Found {len(results)} unique URLs to check\n")
+    logger.info("\n  ✅ Found %s unique URLs to check\n", len(results))
     return results

@@ -1,7 +1,13 @@
 from datetime import datetime
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
 
 LOCATION = "Montreal"
 CURRENT_YEAR = datetime.now().year
+
+LOG_FILE = ROOT_DIR / "event_engine.log"
+VERBOSE_LOGGING = True
 
 SIGNAL_WORDS = [
     "apply", "application", "call for artists", "call for vendors",
@@ -11,6 +17,7 @@ SIGNAL_WORDS = [
 MAX_PAGE_CHARS = 12000
 MIN_CONFIDENCE = 0.55
 FETCH_DELAY = 1.5
+VITALY_MAX_RESULT = 5
 
 BLOCKED_DOMAINS = [
     "facebook.com", "fb.com",

@@ -1,3 +1,6 @@
+from event_engine.config import LOCATION
+
+
 def _print_field(label: str, value, indent: int = 2) -> None:
     if value and value != "null":
         pad = " " * indent
@@ -28,3 +31,27 @@ def print_event(event: dict, source_url: str, index: int) -> None:
     _print_field("Instagram:", sm.get("instagram"))
     _print_field("Facebook:", sm.get("facebook"))
     _print_field("Website:", sm.get("website"))
+
+def print_results(events_found: list[dict]) -> None:
+    print(f"{'='*60}")
+    print(f"  RESULTS — {len(events_found)} events found in {LOCATION}")
+    print(f"{'='*60}")
+
+    if not events_found:
+        print("No events found. Try:")
+        print("  - Broadening the search queries")
+        print("  - Lowering MIN_CONFIDENCE threshold")
+        print("  - Checking your API keys are valid")
+    else:
+        for i, event in enumerate(events_found, 1):
+            print_event(event, event.get("source_url", ""), i)
+
+
+def print_summary(**kwargs) -> None:
+    print(f"{'='*60}")
+    print(f"  RUN SUMMARY")
+    
+    for key, value in kwargs.items():
+        print(f"  {key}: {value}")
+
+    print(f"{'='*60}")

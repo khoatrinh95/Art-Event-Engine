@@ -9,6 +9,9 @@ except ModuleNotFoundError:  # pragma: no cover
     BeautifulSoup = None
 
 from .config import MAX_PAGE_CHARS
+from .logger import LoggerEventEngine
+
+logger = LoggerEventEngine.get_logger()
 
 '''
 Function to extract text from html, return a clean one-line string with normalized spacing.
@@ -31,9 +34,10 @@ def extract_text_from_html(html: str) -> str:
 def fetch_page_text(url: str) -> Optional[str]:
     """Fetch a URL and return clean text content, or None on failure."""
     if requests is None or BeautifulSoup is None:
-        print("     ✗ Fetch failed: requests and bs4 are required")
+        logger.error("     ✗ Fetch failed: requests and bs4 are required")
         return None
 
+    logger.debug("Fetching page text: %s", url)
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -43,9 +47,18 @@ def fetch_page_text(url: str) -> Optional[str]:
     }
     try:
         response = requests.get(url, headers=headers, timeout=12)
-        response.raise_for_status()
-        return extract_text_from_html(response.text)[:MAX_PAGE_CHARS]
+        clean_text = extract_text_from_html(response.text)[:MAX_PAGE_CHARS]
+        logger.debug("Fetched %s chars from %s", len(clean_text), url)
+        return clean_text
 
     except Exception as exc:
-        print(f"     ✗ Fetch failed: {exc}")
+        logger.error("     ✗ Fetch failed: %s", exc)
+        logger.debug("Fetch exception details for %s", url, exc_info=True)
         return None
+
+if __name__ == "__main__":
+    import sys
+
+    url = sys.argv[1]
+    result = fetch_page_text(url)
+    print(result)
