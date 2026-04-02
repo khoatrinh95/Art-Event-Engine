@@ -47,6 +47,52 @@ TAVILY_API_KEY="your_tavily_api_key"
 ANTHROPIC_API_KEY="your_anthropic_api_key"
 ```
 
+## Database setup
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+```bash
+  brew install libpq
+  echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
+  source ~/.zshrc
+```
+
+### Start the database container
+```bash
+docker run -d \
+  --name art-events-db \
+  -e POSTGRES_PASSWORD=localpass \
+  -e POSTGRES_DB=art_events \
+  -p 5432:5432 \
+  postgis/postgis:16-3.4
+```
+
+### Run the migrations
+From the project root:
+```bash
+psql postgresql://postgres:localpass@localhost:5432/art_events < migrations/001_schema.sql
+psql postgresql://postgres:localpass@localhost:5432/art_events < migrations/002_indexes.sql
+```
+
+### Verify
+```bash
+psql postgresql://postgres:localpass@localhost:5432/art_events
+```
+Then inside the Postgres session:
+```sql
+\dt
+```
+You should see `cities`, `search_runs`, `raw_results`, and `events`.
+
+Type `\q` to exit.
+
+### Daily workflow
+The container doesn't start automatically when you reboot. Each time you sit down to work:
+```bash
+docker start art-events-db   # start
+docker stop art-events-db    # stop when done
+```
+
 ## Usage
 
 Run the engine from the repository root:
